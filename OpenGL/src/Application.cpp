@@ -8,6 +8,7 @@
 #include "Renderer.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
+#include "VertexArray.h"
 
 struct ShaderProgramSource {
 	std::string VertexSource;
@@ -59,7 +60,6 @@ static unsigned int CompileShader(unsigned int type,const std::string& source) {
 		GLCall(glDeleteShader(id));
 		return 0;
 	}
-
 	return id;
 }
 
@@ -90,7 +90,6 @@ int main(void) {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-
 	/* Create a windowed mode window and its OpenGL context */
 	window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
 	if (!window) {
@@ -108,7 +107,6 @@ int main(void) {
 
 	std::cout << glGetString(GL_VERSION) << "\n";
 
-	
 	{
 		float positions[] = {
 			 -0.5f, -0.5f,
@@ -117,21 +115,16 @@ int main(void) {
 			 -0.5f, 0.5f,
 		};
 
-
 		unsigned int indices[] = {
 			0,1,2,
 			2,3,0
 		};
 
-		unsigned int vao;
-		GLCall(glGenVertexArrays(1, &vao));
-		GLCall(glBindVertexArray(vao));
-
+		VertexArray va;
 		VertexBuffer vb(positions, 4 * 2 * sizeof(float));
-
-		GLCall(glEnableVertexAttribArray(0));
-		GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0));
-
+		VertexBufferLayout layout;
+		layout.Push<float>(2);
+		va.AddBuffer(vb, layout);
 		IndexBuffer ib(indices, 6);
 
 		ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
@@ -146,7 +139,7 @@ int main(void) {
 		float g = 0.0f;
 		float gincrement = 0.005f;
 
-		GLCall(glBindVertexArray(0));
+		va.Unbind();
 		GLCall(glUseProgram(0));
 		GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
@@ -159,7 +152,7 @@ int main(void) {
 			GLCall(glUseProgram(shader));
 			GLCall(glUniform4f(location, 0.4f, g, 0.7f, 1.0f));
 
-			GLCall(glBindVertexArray(vao));
+			va.Bind();
 			ib.Bind();
 
 			GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
@@ -174,9 +167,8 @@ int main(void) {
 			/* Poll for and process events */
 			glfwPollEvents();
 		}
-
-		//glDeleteProgram(shader);
 	}
+
 	glfwTerminate();
 	return 0;
 }
