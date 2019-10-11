@@ -13,6 +13,9 @@
 #include "Shader.h"
 #include "Texture.h"
 
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+
 int main(void) {
 	GLFWwindow* window;
 
@@ -50,8 +53,8 @@ int main(void) {
 		};
 
 		unsigned int indices[] = {
-			0,1,2,
-			2,3,0
+			0, 1 ,2,
+			2, 3 ,0
 		};
 
 		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
@@ -67,9 +70,11 @@ int main(void) {
 
 		IndexBuffer ib(indices, 6);
 
+		glm::mat4 proj = glm::ortho(-2.0f, 2.0f, -1.5f, 1.5f, -1.0f, 1.0f);
+
 		Shader shader("res/shaders/Basic.shader");
 		shader.Bind();
-		shader.SetUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
+		shader.SetUniformMat4f("u_MVP", proj);
 
 		Texture texture("res/textures/texture.png");
 		texture.Bind();
@@ -92,7 +97,6 @@ int main(void) {
 			renderer.Clear();
 
 			shader.Bind();
-			shader.SetUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);
 			renderer.Draw(va, ib, shader);
 
 			if (r > 1.0f) increment = -0.05f;
